@@ -353,14 +353,11 @@ def main():
         users_path = os.path.join(base_path, "users")
         # TODO: Merge tweets of multiple accounts and order them by date
         for user_item in user_dict[:]:
-            user_item["skip_pin"] = False
             if isinstance(user_item["twitter_username"], list):
                 warn_msg = _(
-                    "Multiple twitter users for one Fediverse account, "
-                    "skipping profile and pinned tweet."
+                    "Multiple twitter users for one Fediverse account."
                 )
                 logger.warning(warn_msg)
-                user_item["skip_pin"] = True
                 for twitter_user in user_item["twitter_username"]:
                     new_user = dict(user_item)
                     new_user["twitter_username"] = twitter_user
@@ -460,13 +457,6 @@ def main():
 
                     time.sleep(user.delay_post)
 
-            if not args.noProfile:
-                if user.skip_pin:
-                    logger.warning(
-                        _("Multiple twitter users, not updating profile")
-                    )
-                else:
-                    user.update_pleroma()
             # Clean-up
             shutil.rmtree(user.tweets_temp_path)
     except Exception:
