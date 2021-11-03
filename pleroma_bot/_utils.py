@@ -1,4 +1,3 @@
-import os
 import re
 import time
 import json
@@ -100,54 +99,6 @@ def spinner(message, spinner_symbols: list = None):
         return wrapper
 
     return external
-
-
-def check_pinned(self):
-    """
-    Checks if a tweet is pinned and needs to be retrieved and posted on the
-    Fediverse account
-    """
-    logger.info(_("Current pinned:\t{}").format(str(self.pinned_tweet_id)))
-    pinned_file = os.path.join(self.user_path, "pinned_id.txt")
-    if os.path.isfile(pinned_file):
-        with open(pinned_file, "r") as file:
-            previous_pinned_tweet_id = file.readline().rstrip()
-            if previous_pinned_tweet_id == "":
-                previous_pinned_tweet_id = None
-    else:
-        previous_pinned_tweet_id = None
-    logger.info(
-        _("Previous pinned:\t{}").format(str(previous_pinned_tweet_id))
-    )
-    if (
-        self.pinned_tweet_id != previous_pinned_tweet_id
-        and self.pinned_tweet_id is not None
-    ):
-        pinned_tweet = self._get_tweets("v2", self.pinned_tweet_id)
-        tweets_to_post = {
-            "data": [pinned_tweet["data"]],
-            "includes": pinned_tweet["includes"],
-        }
-        tweets_to_post = self.process_tweets(tweets_to_post)
-        id_post_to_pin = self.post_pleroma(
-            (self.pinned_tweet_id, tweets_to_post["data"][0]["text"]),
-            tweets_to_post["data"][0]["polls"],
-            tweets_to_post["data"][0]["possibly_sensitive"],
-        )
-        pleroma_pinned_post = self.pin_pleroma(id_post_to_pin)
-        with open(pinned_file, "w") as file:
-            file.write(f"{self.pinned_tweet_id}\n")
-        if pleroma_pinned_post is not None:
-            with open(
-                os.path.join(self.user_path, "pinned_id_pleroma.txt"), "w"
-            ) as file:
-                file.write(f"{pleroma_pinned_post}\n")
-    elif (
-        self.pinned_tweet_id != previous_pinned_tweet_id
-        and previous_pinned_tweet_id is not None
-    ):
-        pinned_file = os.path.join(self.user_path, "pinned_id_pleroma.txt")
-        self.unpin_pleroma(pinned_file)
 
 
 def replace_vars_in_str(self, text: str, var_name: str = None) -> str:

@@ -49,18 +49,12 @@ class User(object):
     from ._twitter import _get_tweets_v2
     from ._twitter import _get_twitter_info
 
-    from ._pin import pin_pleroma
-    from ._pin import unpin_pleroma
-    from ._pin import get_pinned_tweet
-    from ._pin import _get_pinned_tweet_id
-
     from ._pleroma import post_pleroma
     from ._pleroma import update_pleroma
     from ._pleroma import get_date_last_pleroma_post
 
     from ._utils import force_date
     from ._utils import guess_type
-    from ._utils import check_pinned
     from ._utils import random_string
     from ._utils import _get_instance_info
     from ._utils import replace_vars_in_str
@@ -226,7 +220,6 @@ class User(object):
             self.auth = None
 
         self.tweets = None
-        self.pinned_tweet_id = self._get_pinned_tweet_id()
         self.last_post_pleroma = None
         # Filesystem
         # self.base_path = os.getcwd()
@@ -466,8 +459,6 @@ def main():
                     )
 
                     time.sleep(user.delay_post)
-            if not user.skip_pin:
-                user.check_pinned()
 
             if not args.noProfile:
                 if user.skip_pin:
