@@ -1,9 +1,7 @@
 import os
 from json.decoder import JSONDecodeError
 
-import re
 import json
-import shutil
 import requests
 import mimetypes
 from datetime import datetime, timedelta
@@ -154,106 +152,3 @@ def post_pleroma(self, tweet: tuple, poll: dict, sensitive: bool) -> str:
     logger.info(_("Post in Pleroma:\t{}").format(str(response)))
     post_id = json.loads(response.text)["id"]
     return post_id
-
-
-def update_pleroma(self):
-    """Update the Pleroma user info with the one retrieved from Twitter
-    when the User object was instantiated.
-    This includes:
-
-    * Profile image (if exists)
-    * Banner image (if exists)
-    * Bio text
-    * Screen name
-    * Additional metadata fields
-
-    :returns: None
-    """
-    # Get the biggest resolution for the profile picture (400x400)
-    # instead of 'normal'
-    if self.profile_image_url:
-        profile_img_big = re.sub(r"normal", "400x400", self.profile_image_url)
-        response = requests.get(profile_img_big, stream=True)
-        if not response.ok:
-            response.raise_for_status()
-        response.raw.decode_content = True
-        with open(self.avatar_path, "wb") as outfile:
-            shutil.copyfileobj(response.raw, outfile)
-
-    if self.profile_banner_url:
-        response = requests.get(self.profile_banner_url, stream=True)
-        if not response.ok:
-            response.raise_for_status()
-        response.raw.decode_content = True
-        with open(self.header_path, "wb") as outfile:
-            shutil.copyfileobj(response.raw, outfile)
-
-    # Set it on Pleroma
-    cred_url = f"{self.pleroma_base_url}/api/v1/accounts/update_credentials"
-
-    # Construct fields
-    fields = []
-    for field_item in self.fields:
-        field = (field_item["name"], field_item["value"])
-        fields.append(field)
-    data = {"note": self.bio_text, "display_name": self.display_name}
-
-    if self.profile_image_url:
-        data.update({"avatar": self.avatar_path})
-
-    if self.profile_banner_url:
-        data.update({"header": self.header_path})
-
-    if len(fields) > 4:
-        raise Exception(
-            _(
-                "Total number of metadata fields cannot exceed 4."
-                "\nProvided: {}. Exiting..."
-            ).format(len(fields))
-        )
-    for idx, (field_name, field_value) in enumerate(fields):
-        data[f'fields_attributes["{str(idx)}"][name]'] = field_name
-        data[f'fields_attributes["{str(idx)}"][value]'] = field_value
-
-    files = {}
-    timestamp = str(datetime.now().timestamp())
-    if self.profile_image_url:
-        avatar = open(self.avatar_path, "rb")
-        avatar_mime_type = guess_type(self.avatar_path)
-        avatar_file_name = (
-            f"pleromapyupload_{timestamp}_"
-            f"{random_string(10)}"
-            f"{mimetypes.guess_extension(avatar_mime_type)}"
-        )
-        files.update({"avatar": (avatar_file_name, avatar, avatar_mime_type)})
-    if self.profile_banner_url:
-        header = open(self.header_path, "rb")
-        header_mime_type = guess_type(self.header_path)
-        header_file_name = (
-            f"pleromapyupload_{timestamp}_"
-            f"{random_string(10)}"
-            f"{mimetypes.guess_extension(header_mime_type)}"
-        )
-        files.update({"header": (header_file_name, header, header_mime_type)})
-
-    response = requests.patch(
-        cred_url, data, headers=self.header_pleroma, files=files
-    )
-    try:
-        if not response.ok:
-            response.raise_for_status()
-    except requests.exceptions.HTTPError:
-        if response.status_code == 422:
-            bio_msg = _(
-                "Exception occurred"
-                "\nError code 422"
-                "\n(Unprocessable Entity)"
-                "\nPlease check that the bio text or the metadata fields text"
-                "\naren't too long."
-            )
-            logger.error(bio_msg)
-            pass
-        else:
-            response.raise_for_status()
-    logger.info(_("Updating profile:\t {}").format(str(response)))
-    return

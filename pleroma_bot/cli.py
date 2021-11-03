@@ -50,7 +50,6 @@ class User(object):
     from ._twitter import _get_twitter_info
 
     from ._pleroma import post_pleroma
-    from ._pleroma import update_pleroma
     from ._pleroma import get_date_last_pleroma_post
 
     from ._utils import force_date

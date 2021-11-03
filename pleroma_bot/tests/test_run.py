@@ -176,41 +176,6 @@ def test_get_twitter_info(mock_request, sample_users):
     return mock
 
 
-def test_update_pleroma(sample_users, rootdir):
-    """
-    Check that update_pleroma downloads the correct profile image and banner
-    """
-    for sample_user in sample_users:
-        with sample_user['mock'] as mock:
-            sample_user_obj = sample_user['user_obj']
-            test_files_dir = os.path.join(rootdir, 'test_files')
-            sample_data_dir = os.path.join(test_files_dir, 'sample_data')
-            media_dir = os.path.join(sample_data_dir, 'media')
-
-            banner = os.path.join(media_dir, 'banner.jpg')
-            profile_banner = open(banner, 'rb')
-            profile_banner_content = profile_banner.read()
-            profile_banner.close()
-
-            profile_pic = os.path.join(media_dir, 'default_profile_normal.png')
-            profile_image = open(profile_pic, 'rb')
-            profile_image_content = profile_image.read()
-            profile_image.close()
-
-            sample_user_obj.update_pleroma()
-
-            t_profile_banner = open(sample_user_obj.header_path, 'rb')
-            t_profile_banner_content = t_profile_banner.read()
-            t_profile_banner.close()
-
-            t_profile_image = open(sample_user_obj.avatar_path, 'rb')
-            t_profile_image_content = t_profile_image.read()
-            t_profile_image.close()
-            assert t_profile_banner_content == profile_banner_content
-            assert t_profile_image_content == profile_image_content
-    return mock
-
-
 def test_post_pleroma_media(rootdir, sample_users, mock_request):
     test_user = UserTemplate()
     for sample_user in sample_users:
